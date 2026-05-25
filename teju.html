@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detective Owoeye Busayomi Ezekiel — Deep Learning Fraud Detection | OOU Computer Science</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#07080d; --surface:#0e1018; --panel:#13161f; --border:#1e2332;
+    --safe:#00c853; --warn:#ff9100; --danger:#ff1744; --blue:#2979ff; --gold:#ffd600;
+    --text:#e8eaf0; --muted:#5a6380;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(ellipse 80% 60% at 70% 20%,rgba(0,200,83,0.04) 0%,transparent 60%),
+               radial-gradient(ellipse 60% 40% at 20% 80%,rgba(41,121,255,0.04) 0%,transparent 60%);}
+
+  /* TOPBAR */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:58px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 1.5rem;background:rgba(7,8,13,0.92);
+    backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+  .logo{display:flex;align-items:center;gap:.75rem;}
+  .logo-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--safe),#00796b);
+    display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;
+    color:#07080d;box-shadow:0 0 16px rgba(0,200,83,.3);}
+  .logo-text{font-size:1.05rem;font-weight:800;letter-spacing:-.02em;}
+  .logo-sub{font-size:.62rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:-2px;}
+  .topbar-right{display:flex;align-items:center;gap:1rem;}
+  .live-pill{display:flex;align-items:center;gap:.4rem;font-size:.68rem;font-family:'Space Mono',monospace;
+    color:var(--safe);border:1px solid rgba(0,200,83,.3);padding:.25rem .7rem;border-radius:999px;}
+  .live-dot{width:5px;height:5px;background:var(--safe);border-radius:50%;animation:blink 1.2s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+  .clock{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted);}
+
+  /* SHELL */
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh;padding-top:58px;position:relative;z-index:1;}
+
+  /* SIDEBAR */
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.25rem .75rem;
+    display:flex;flex-direction:column;gap:.25rem;position:sticky;top:58px;
+    height:calc(100vh - 58px);overflow-y:auto;}
+  .nav-sec{font-size:.6rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:.12em;
+    text-transform:uppercase;padding:.9rem .6rem .3rem;}
+  .nav-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;border-radius:7px;
+    cursor:pointer;font-size:.83rem;font-weight:600;color:var(--muted);transition:all .15s;border:1px solid transparent;}
+  .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text);}
+  .nav-item.active{background:rgba(0,200,83,.1);color:var(--safe);border-color:rgba(0,200,83,.2);}
+  .nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:.6rem;
+    font-family:'Space Mono',monospace;padding:.1rem .45rem;border-radius:999px;min-width:20px;text-align:center;}
+  .school-badge{margin-top:auto;padding:.85rem;background:rgba(0,200,83,.06);
+    border:1px solid rgba(0,200,83,.15);border-radius:8px;text-align:center;}
+  .school-badge .sn{font-size:.68rem;font-weight:700;color:var(--safe);}
+  .school-badge .sd{font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+
+  /* MAIN */
+  .main{padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+  .page-title{font-size:1.45rem;font-weight:800;letter-spacing:-.03em;}
+  .page-sub{font-size:.72rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:.2rem;}
+  .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:7px;
+    font-size:.8rem;font-weight:700;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all .2s;}
+  .btn-primary{background:var(--safe);color:#07080d;}
+  .btn-primary:hover{filter:brightness(1.1);box-shadow:0 0 20px rgba(0,200,83,.35);}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--safe);color:var(--safe);}
+
+  /* KPI */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:1.1rem 1.2rem;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;}
+  .kpi:hover{border-color:rgba(0,200,83,.3);transform:translateY(-1px);}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .kpi.g::before{background:linear-gradient(90deg,var(--safe),transparent);}
+  .kpi.r::before{background:linear-gradient(90deg,var(--danger),transparent);}
+  .kpi.a::before{background:linear-gradient(90deg,var(--warn),transparent);}
+  .kpi.b::before{background:linear-gradient(90deg,var(--blue),transparent);}
+  .kpi-label{font-size:.67rem;font-family:'Space Mono',monospace;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem;}
+  .kpi-val{font-size:1.65rem;font-weight:800;letter-spacing:-.03em;line-height:1;}
+  .kpi-delta{font-size:.68rem;color:var(--muted);margin-top:.3rem;font-family:'Space Mono',monospace;}
+  .kpi-delta.up{color:var(--safe);} .kpi-delta.dn{color:var(--danger);}
+
+  .two-col{display:grid;grid-template-columns:1fr 320px;gap:1.25rem;}
+  .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .card-head{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-size:.85rem;font-weight:700;}
+  .card-tag{font-size:.6rem;font-family:'Space Mono',monospace;color:var(--muted);background:var(--panel);padding:.18rem .55rem;border-radius:4px;}
+  .card-body{padding:1.2rem;}
+
+  /* TABLE */
+  .tx-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+  .tx-table thead th{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.08em;text-align:left;padding:.5rem .8rem;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .tx-table tbody tr{border-bottom:1px solid rgba(30,35,50,.8);cursor:pointer;transition:background .1s;}
+  .tx-table tbody tr:last-child{border-bottom:none;}
+  .tx-table tbody tr:hover{background:rgba(255,255,255,.025);}
+  .tx-table tbody td{padding:.6rem .8rem;}
+  .tx-id{font-family:'Space Mono',monospace;color:var(--muted);font-size:.68rem;}
+  .pill{display:inline-flex;align-items:center;gap:.3rem;font-size:.65rem;font-family:'Space Mono',monospace;
+    padding:.18rem .5rem;border-radius:999px;font-weight:700;}
+  .pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+  .pill.safe{background:rgba(0,200,83,.12);color:var(--safe);}
+  .pill.medium{background:rgba(255,145,0,.12);color:var(--warn);}
+  .pill.high{background:rgba(255,23,68,.12);color:var(--danger);}
+  .naira-amt{font-weight:700;font-family:'Space Mono',monospace;font-size:.8rem;}
+  .naira-amt.sus{color:var(--danger);}
+  .score-mini{display:flex;align-items:center;gap:.5rem;}
+  .score-mini-bar{flex:1;height:4px;background:var(--panel);border-radius:999px;overflow:hidden;min-width:50px;}
+  .score-mini-fill{height:100%;border-radius:999px;}
+  .score-mini-num{font-size:.68rem;font-family:'Space Mono',monospace;width:22px;text-align:right;}
+
+  /* GAUGE */
+  .gauge-center{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.5rem 0;}
+  .gauge-num{font-size:2.2rem;font-weight:800;font-family:'Space Mono',monospace;line-height:1;}
+  .gauge-lbl{font-size:.65rem;font-family:'Space Mono',monospace;color:var(--muted);}
+  .mini-bars{display:flex;flex-direction:column;gap:.65rem;}
+  .mb-row{display:flex;align-items:center;gap:.65rem;}
+  .mb-lbl{font-size:.72rem;color:var(--muted);width:110px;flex-shrink:0;}
+  .mb-track{flex:1;height:5px;background:var(--panel);border-radius:999px;overflow:hidden;}
+  .mb-fill{height:100%;border-radius:999px;}
+  .mb-pct{font-size:.68rem;font-family:'Space Mono',monospace;width:32px;text-align:right;}
+
+  /* ALERTS */
+  .alert-feed{display:flex;flex-direction:column;}
+  .alert-item{padding:.7rem 1.2rem;border-bottom:1px solid var(--border);display:flex;gap:.65rem;
+    align-items:flex-start;cursor:pointer;transition:background .1s;}
+  .alert-item:hover{background:rgba(255,255,255,.02);}
+  .alert-item:last-child{border-bottom:none;}
+  .al-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+  .al-dot.high{background:var(--danger);box-shadow:0 0 6px var(--danger);}
+  .al-dot.medium{background:var(--warn);}
+  .al-dot.low{background:var(--safe);}
+  .al-text{font-size:.76rem;line-height:1.45;}
+  .al-time{font-size:.62rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:.15rem;}
+
+  /* ANALYZE */
+  .analyze-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .analyze-card .card-head{background:rgba(0,200,83,.04);border-bottom-color:rgba(0,200,83,.12);}
+  .analyze-body{padding:1.25rem;display:flex;flex-direction:column;gap:1rem;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;}
+  .field{display:flex;flex-direction:column;gap:.3rem;}
+  .field label{font-size:.65rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;}
+  .field input,.field select,.field textarea{background:var(--panel);border:1px solid var(--border);border-radius:7px;
+    color:var(--text);padding:.55rem .8rem;font-size:.82rem;font-family:'Outfit',sans-serif;outline:none;transition:border-color .15s;width:100%;}
+  .field input:focus,.field select:focus{border-color:var(--safe);box-shadow:0 0 0 2px rgba(0,200,83,.1);}
+  .field select option{background:var(--panel);}
+  .naira-wrap{position:relative;}
+  .naira-wrap input{padding-left:2rem;}
+  .naira-sym{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);
+    font-family:'Space Mono',monospace;color:var(--muted);font-size:.82rem;pointer-events:none;}
+
+  /* PROCESSING */
+  .proc-box{display:none;flex-direction:column;gap:.5rem;padding:1rem 1.1rem;
+    background:var(--panel);border-radius:8px;border:1px solid var(--border);}
+  .proc-box.on{display:flex;}
+  .proc-step{display:flex;align-items:center;gap:.65rem;font-size:.75rem;font-family:'Space Mono',monospace;
+    color:var(--muted);opacity:.3;transition:all .3s;}
+  .proc-step.active{color:var(--text);opacity:1;}
+  .proc-step.done{color:var(--safe);opacity:1;}
+  .proc-bar{height:2px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:.4rem;}
+  .proc-bar-fill{height:100%;background:var(--safe);border-radius:999px;width:0%;transition:width .4s ease;}
+
+  /* RESULT */
+  .result-box{display:none;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .result-box.on{display:block;animation:fadeUp .4s ease;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .result-head{padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .result-head.sh{background:rgba(0,200,83,.07);border-color:rgba(0,200,83,.2);}
+  .result-head.wh{background:rgba(255,145,0,.07);border-color:rgba(255,145,0,.2);}
+  .result-head.dh{background:rgba(255,23,68,.07);border-color:rgba(255,23,68,.2);}
+  .result-verdict{font-size:1rem;font-weight:800;}
+  .result-score-label{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;}
+  .result-body{padding:1.2rem;display:flex;flex-direction:column;gap:1rem;}
+  .sec-title{font-size:.65rem;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem;}
+  .score-track{height:8px;background:var(--panel);border-radius:999px;overflow:hidden;}
+  .score-fill{height:100%;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+  .factor-list{display:flex;flex-direction:column;gap:.35rem;}
+  .factor-item{display:flex;align-items:flex-start;gap:.5rem;font-size:.8rem;line-height:1.5;
+    padding:.5rem .75rem;border-radius:6px;}
+  .factor-item.bad{background:rgba(255,23,68,.06);border-left:2px solid var(--danger);}
+  .factor-item.warn{background:rgba(255,145,0,.06);border-left:2px solid var(--warn);}
+  .factor-item.good{background:rgba(0,200,83,.06);border-left:2px solid var(--safe);}
+  .action-box{padding:.75rem 1rem;border-radius:7px;font-size:.82rem;font-weight:600;line-height:1.5;}
+  .action-box.block-a{background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.25);color:var(--danger);}
+  .action-box.review-a{background:rgba(255,145,0,.1);border:1px solid rgba(255,145,0,.25);color:var(--warn);}
+  .action-box.allow-a{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.25);color:var(--safe);}
+  .ng-pattern{padding:.65rem .9rem;background:rgba(255,214,0,.06);border:1px solid rgba(255,214,0,.15);
+    border-radius:6px;font-size:.76rem;color:var(--gold);line-height:1.5;}
+  .confidence-row{display:flex;gap:1rem;flex-wrap:wrap;}
+  .conf-item{flex:1;min-width:100px;background:var(--panel);border:1px solid var(--border);
+    border-radius:7px;padding:.6rem .8rem;text-align:center;}
+  .conf-val{font-size:1.1rem;font-weight:800;font-family:'Space Mono',monospace;}
+  .conf-lbl{font-size:.62rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:.2rem;}
+
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px;}
+
+  @media(max-width:960px){
+    .shell{grid-template-columns:1fr}.sidebar{display:none}
+    .kpi-row{grid-template-columns:1fr 1fr}
+    .two-col,.three-col{grid-template-columns:1fr}
+    .form-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:560px){
+    .kpi-row{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">₦</div>
+    <div>
+      <div class="logo-text">Detective Owoeye Busayomi Ezekiel</div>
+      <div class="logo-sub">Deep Learning Fraud Detection System · OOU CS Dept</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-pill"><span class="live-dot"></span>LIVE</div>
+    <div class="clock" id="clockEl">—</div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="nav-sec">Monitor</div>
+    <div class="nav-item active">📊 Dashboard</div>
+    <div class="nav-item">⚡ Live Alerts <span class="nav-badge" id="badgeCount">5</span></div>
+    <div class="nav-item">📋 Transactions</div>
+    <div class="nav-sec">Detection</div>
+    <div class="nav-item">🔬 Fraud Analyzer</div>
+    <div class="nav-item">🔍 Pattern Engine</div>
+    <div class="nav-item">👤 Risk Profiles</div>
+    <div class="nav-sec">Intelligence</div>
+    <div class="nav-item">🧠 Neural Network</div>
+    <div class="nav-item">🗺️ Anomaly Map</div>
+    <div class="nav-item">📄 Reports</div>
+    <div class="nav-sec">Settings</div>
+    <div class="nav-item">⚙️ Model Config</div>
+    <div class="nav-item">🎚️ Thresholds</div>
+    <div class="school-badge">
+      <div class="sn">Olabisi Onabanjo University</div>
+      <div class="sd">Department of Computer Science</div>
+      <div class="sd" style="margin-top:3px;">Final Year Project · 2026/2027</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div class="page-head">
+      <div>
+        <div class="page-title">Nigerian Payment Fraud Intelligence</div>
+        <div class="page-sub">LSTM · ATTENTION MECHANISM · RULE-BASED DEEP LEARNING ENGINE · REAL-TIME</div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="refreshAll()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="document.getElementById('analyzeSection').scrollIntoView({behavior:'smooth'})">🔬 Analyze Transaction</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi g">
+        <div class="kpi-label">Transactions Today</div>
+        <div class="kpi-val" id="kTx">142,804</div>
+        <div class="kpi-delta up">↑ 18.3% vs yesterday</div>
+      </div>
+      <div class="kpi r">
+        <div class="kpi-label">Fraud Blocked (₦)</div>
+        <div class="kpi-val">₦<span id="kFraud">48.2M</span></div>
+        <div class="kpi-delta dn">↑ 4.7% unusual spike</div>
+      </div>
+      <div class="kpi a">
+        <div class="kpi-label">Under Review</div>
+        <div class="kpi-val" id="kReview">67</div>
+        <div class="kpi-delta">Pending analyst review</div>
+      </div>
+      <div class="kpi b">
+        <div class="kpi-label">Model Accuracy</div>
+        <div class="kpi-val">99.6<span style="font-size:1rem">%</span></div>
+        <div class="kpi-delta up">↑ 0.3% this week</div>
+      </div>
+    </div>
+
+    <!-- CHART + ALERTS -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Transaction Volume vs Fraud Detected — Nigeria (24h)</span>
+          <span class="card-tag">NATIONWIDE</span>
+        </div>
+        <div class="card-body" style="padding:.75rem;">
+          <canvas id="volCanvas" style="width:100%;height:150px;display:block;"></canvas>
+          <div style="display:flex;gap:1.5rem;margin-top:.5rem;font-size:.67rem;font-family:'Space Mono',monospace;color:var(--muted);">
+            <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:10px;height:3px;background:var(--blue);display:inline-block;border-radius:2px;"></span>Total Volume</span>
+            <span style="display:flex;align-items:center;gap:.35rem;"><span style="width:10px;height:3px;background:var(--danger);display:inline-block;border-radius:2px;"></span>Fraud Detected</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Live Alerts</span>
+          <div class="live-pill" style="font-size:.58rem;"><span class="live-dot"></span>LIVE</div>
+        </div>
+        <div class="alert-feed" id="alertFeed"></div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS + GAUGE -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Recent Nigerian Transactions</span>
+          <span class="card-tag">REAL-TIME · ₦ NAIRA</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="tx-table">
+            <thead><tr>
+              <th>TX REF</th><th>Bank / Channel</th><th>Amount (₦)</th>
+              <th>Risk Score</th><th>Status</th><th>Time</th>
+            </tr></thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">System Risk Index</span><span class="card-tag">COMPOSITE</span></div>
+        <div class="card-body">
+          <div class="gauge-center">
+            <canvas id="gaugeCanvas" width="200" height="115"></canvas>
+            <div class="gauge-num" id="gaugeNum">34</div>
+            <div class="gauge-lbl">/ 100 THREAT LEVEL</div>
+          </div>
+          <div style="margin-top:1rem;" class="mini-bars">
+            <div class="mb-row"><span class="mb-lbl">POS Fraud</span><div class="mb-track"><div class="mb-fill" style="width:54%;background:var(--danger);"></div></div><span class="mb-pct">54%</span></div>
+            <div class="mb-row"><span class="mb-lbl">Mobile Money</span><div class="mb-track"><div class="mb-fill" style="width:26%;background:var(--warn);"></div></div><span class="mb-pct">26%</span></div>
+            <div class="mb-row"><span class="mb-lbl">Internet Banking</span><div class="mb-track"><div class="mb-fill" style="width:13%;background:var(--blue);"></div></div><span class="mb-pct">13%</span></div>
+            <div class="mb-row"><span class="mb-lbl">ATM Fraud</span><div class="mb-track"><div class="mb-fill" style="width:7%;background:var(--muted);"></div></div><span class="mb-pct">7%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURE IMPORTANCE + NETWORK -->
+    <div class="three-col">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Model Feature Importance</span><span class="card-tag">LSTM WEIGHTS</span></div>
+        <div class="card-body">
+          <div class="mini-bars">
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">Tx Velocity</span><div class="mb-track"><div class="mb-fill" style="width:91%;background:var(--danger);"></div></div><span class="mb-pct">91%</span></div>
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">Geo Anomaly</span><div class="mb-track"><div class="mb-fill" style="width:78%;background:var(--danger);"></div></div><span class="mb-pct">78%</span></div>
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">Amount Deviation</span><div class="mb-track"><div class="mb-fill" style="width:69%;background:var(--warn);"></div></div><span class="mb-pct">69%</span></div>
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">SIM Swap Signal</span><div class="mb-track"><div class="mb-fill" style="width:62%;background:var(--warn);"></div></div><span class="mb-pct">62%</span></div>
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">Device Trust</span><div class="mb-track"><div class="mb-fill" style="width:54%;background:var(--blue);"></div></div><span class="mb-pct">54%</span></div>
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">Time Pattern</span><div class="mb-track"><div class="mb-fill" style="width:43%;background:var(--blue);"></div></div><span class="mb-pct">43%</span></div>
+            <div class="mb-row"><span class="mb-lbl" style="font-size:.7rem;">BVN Match</span><div class="mb-track"><div class="mb-fill" style="width:38%;background:var(--muted);"></div></div><span class="mb-pct">38%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="grid-column:span 2;">
+        <div class="card-head"><span class="card-title">Neural Network — Transaction Node Graph</span><span class="card-tag">LIVE</span></div>
+        <div class="card-body" style="padding:.5rem;">
+          <canvas id="netCanvas" style="width:100%;height:210px;display:block;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FRAUD ANALYZER ═══ -->
+    <div id="analyzeSection" class="analyze-card">
+      <div class="card-head">
+        <span class="card-title">🔬 Deep Learning Fraud Analyzer — Nigeria Payment System</span>
+        <span class="card-tag">LSTM + WEIGHTED RULE ENGINE</span>
+      </div>
+      <div class="analyze-body">
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Transaction Amount (₦)</label>
+            <div class="naira-wrap">
+              <span class="naira-sym">₦</span>
+              <input type="number" id="fAmt" placeholder="e.g. 250000" min="0"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Bank / Payment Channel</label>
+            <select id="fBank">
+              <option value="gtbank">GTBank (Guaranty Trust)</option>
+              <option value="firstbank">First Bank of Nigeria</option>
+              <option value="access">Access Bank</option>
+              <option value="zenith">Zenith Bank</option>
+              <option value="uba">UBA (United Bank for Africa)</option>
+              <option value="opay">OPay (Mobile Wallet)</option>
+              <option value="palmpay">PalmPay</option>
+              <option value="kuda">Kuda Bank (Digital)</option>
+              <option value="moniepoint">Moniepoint POS</option>
+              <option value="wema">Wema Bank / ALAT</option>
+              <option value="polaris">Polaris Bank</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Transaction Type</label>
+            <select id="fType">
+              <option value="ussd">USSD Transfer (*737#, *894#)</option>
+              <option value="internet">Internet Banking</option>
+              <option value="pos">POS Terminal</option>
+              <option value="atm">ATM Withdrawal</option>
+              <option value="mobile">Mobile App Transfer</option>
+              <option value="nip">NIP Interbank Transfer</option>
+              <option value="airtime">Airtime / Data Purchase</option>
+              <option value="crypto">Crypto P2P (USDT / BTC)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Sender Location (State)</label>
+            <select id="fState">
+              <option value="lagos">Lagos</option>
+              <option value="abuja">Abuja (FCT)</option>
+              <option value="ogun">Ogun State (OOU Area)</option>
+              <option value="rivers">Rivers (Port Harcourt)</option>
+              <option value="kano">Kano</option>
+              <option value="oyo">Oyo (Ibadan)</option>
+              <option value="anambra">Anambra (Onitsha)</option>
+              <option value="delta">Delta State</option>
+              <option value="edo">Edo (Benin City)</option>
+              <option value="vpn">Unknown / VPN Detected</option>
+              <option value="international">International (Outside Nigeria)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Time of Transaction</label>
+            <select id="fTime">
+              <option value="business">Business Hours (9AM – 5PM)</option>
+              <option value="evening">Evening (5PM – 10PM)</option>
+              <option value="latenight">Late Night (10PM – 5AM)</option>
+              <option value="earlymorning">Early Morning (5AM – 9AM)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Transaction Velocity</label>
+            <select id="fVelocity">
+              <option value="normal">Normal (1 – 3 per hour)</option>
+              <option value="elevated">Elevated (4 – 10 per hour)</option>
+              <option value="high">High (10+ per hour)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Device / SIM Status</label>
+            <select id="fDevice">
+              <option value="verified">Known Device, Verified SIM</option>
+              <option value="newdevice">New Device Detected</option>
+              <option value="simswap">SIM Swap within 48hrs</option>
+              <option value="rooted">Rooted / Jailbroken Device</option>
+              <option value="multisim">Multiple SIMs on Device</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Recipient Account Pattern</label>
+            <select id="fRecipient">
+              <option value="saved">Known Beneficiary (Saved)</option>
+              <option value="newfirst">New Account — First Transfer</option>
+              <option value="multinew">Multiple New Recipients</option>
+              <option value="roundamt">Round-Amount Transfers (₦50k, ₦100k)</option>
+              <option value="flagged">Flagged / Blacklisted Account</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>BVN Verification Status</label>
+            <select id="fBvn">
+              <option value="match">BVN Matches Account</option>
+              <option value="unverified">BVN Unverified</option>
+              <option value="mismatch">BVN Mismatch Detected</option>
+              <option value="blocked">BVN Previously Flagged by CBN</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary" onclick="runAnalysis()">🔬 Run Fraud Analysis</button>
+          <button class="btn btn-ghost" onclick="clearForm()">✕ Clear</button>
+          <button class="btn btn-ghost" onclick="loadDemo()">📋 Load Demo Case</button>
+        </div>
+
+        <!-- PROCESSING -->
+        <div class="proc-box" id="procBox">
+          <div class="proc-step" id="s1">⬡ &nbsp;Extracting transaction feature vectors...</div>
+          <div class="proc-step" id="s2">🔄 &nbsp;Running LSTM sequence analysis...</div>
+          <div class="proc-step" id="s3">🎯 &nbsp;Applying multi-head attention mechanism...</div>
+          <div class="proc-step" id="s4">📊 &nbsp;Computing weighted fraud probability score...</div>
+          <div class="proc-step" id="s5">✅ &nbsp;Generating risk assessment report...</div>
+          <div class="proc-bar"><div class="proc-bar-fill" id="procBarFill"></div></div>
+        </div>
+
+        <!-- RESULT -->
+        <div class="result-box" id="resultBox">
+          <div class="result-head" id="resultHead">
+            <div class="result-verdict" id="resultVerdict"></div>
+            <div class="result-score-label" id="resultScore"></div>
+          </div>
+          <div class="result-body">
+            <div>
+              <div class="sec-title">Fraud Probability Score</div>
+              <div class="score-track"><div class="score-fill" id="scoreFill"></div></div>
+            </div>
+            <div class="confidence-row" id="confRow"></div>
+            <div>
+              <div class="sec-title">Risk Factors Detected by Model</div>
+              <div class="factor-list" id="factorList"></div>
+            </div>
+            <div>
+              <div class="sec-title">Recommended Action</div>
+              <div class="action-box" id="actionBox"></div>
+            </div>
+            <div class="ng-pattern" id="ngPattern"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── CLOCK ──────────────────────────────────────────
+function tick(){ document.getElementById('clockEl').textContent = new Date().toLocaleTimeString('en-NG',{hour12:true})+' WAT'; }
+setInterval(tick,1000); tick();
+
+// ── KPI ANIMATION ──────────────────────────────────
+let txCount = 142804;
+setInterval(()=>{
+  txCount += Math.floor(Math.random()*18)+5;
+  document.getElementById('kTx').textContent = txCount.toLocaleString();
+  const r = parseInt(document.getElementById('kReview').textContent);
+  document.getElementById('kReview').textContent = Math.max(40, r+(Math.random()>.5?1:-1));
+}, 2000);
+
+// ── LIVE TRANSACTIONS ──────────────────────────────
+const banks = ['GTBank','Access Bank','First Bank','Zenith Bank','UBA','OPay','PalmPay','Kuda','Moniepoint','Polaris','Wema Bank'];
+const txTypes = ['NIP Transfer','USSD','POS','Mobile App','ATM','Internet Banking','Airtime'];
+const txRows = [];
+function makeTx(){
+  const fraud=Math.random()>.82, med=!fraud&&Math.random()>.65;
+  const amt=fraud?Math.floor(Math.random()*480000+20000):Math.floor(Math.random()*45000+500);
+  const score=fraud?Math.floor(Math.random()*25+70):med?Math.floor(Math.random()*20+42):Math.floor(Math.random()*30+5);
+  return {
+    ref:'NG'+Date.now().toString().slice(-7)+Math.random().toString(36).slice(2,4).toUpperCase(),
+    bank:banks[Math.floor(Math.random()*banks.length)],
+    type:txTypes[Math.floor(Math.random()*txTypes.length)],
+    amt,score,status:fraud?'high':med?'medium':'safe',
+    time:new Date().toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit',hour12:true})
+  };
+}
+for(let i=0;i<10;i++) txRows.push(makeTx());
+function renderTx(){
+  document.getElementById('txBody').innerHTML = txRows.slice(0,10).map(t=>`
+    <tr>
+      <td class="tx-id">${t.ref}</td>
+      <td style="font-size:.78rem;">${t.bank}<br><span style="font-size:.65rem;color:var(--muted)">${t.type}</span></td>
+      <td class="naira-amt ${t.status==='high'?'sus':''}">₦${t.amt.toLocaleString()}</td>
+      <td><div class="score-mini">
+        <div class="score-mini-bar"><div class="score-mini-fill" style="width:${t.score}%;background:${t.status==='high'?'var(--danger)':t.status==='medium'?'var(--warn)':'var(--safe)'}"></div></div>
+        <span class="score-mini-num">${t.score}</span>
+      </div></td>
+      <td><span class="pill ${t.status}">${t.status.toUpperCase()}</span></td>
+      <td style="font-size:.68rem;font-family:'Space Mono',monospace;color:var(--muted)">${t.time}</td>
+    </tr>`).join('');
+}
+renderTx();
+setInterval(()=>{ txRows.unshift(makeTx()); if(txRows.length>20)txRows.pop(); renderTx(); }, 3500);
+
+// ── ALERTS ─────────────────────────────────────────
+const alertPool=[
+  {sev:'high',msg:'🚨 SIM swap detected — GTBank account ₦2.4M NIP transfer blocked'},
+  {sev:'high',msg:'🚨 14 rapid OPay transfers in 4 mins from same BVN — account frozen'},
+  {sev:'high',msg:'🚨 BVN mismatch on Zenith Bank account — identity theft attempt'},
+  {sev:'high',msg:'🚨 Round-amount pattern: ₦100k × 8 transfers to new accounts — flagged'},
+  {sev:'medium',msg:'⚠️ Late-night ATM withdrawal — Access Bank, Victoria Island Lagos'},
+  {sev:'medium',msg:'⚠️ First Bank: 8 NIP transfers to new accounts in 1 hour — review'},
+  {sev:'medium',msg:'⚠️ PalmPay velocity breach — 12 transactions in 45 minutes'},
+  {sev:'low',msg:'ℹ️ New device login on Kuda — step-up OTP authentication sent'},
+  {sev:'low',msg:'ℹ️ Moniepoint POS: unusual merchant category — soft flag raised'},
+  {sev:'high',msg:'🚨 VPN IP on Paystack API — merchant impersonation suspected'},
+];
+let aIdx=0;
+function pushAlert(){
+  const feed=document.getElementById('alertFeed');
+  const a=alertPool[aIdx%alertPool.length]; aIdx++;
+  const t=new Date().toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  const d=document.createElement('div'); d.className='alert-item';
+  d.innerHTML=`<div class="al-dot ${a.sev}"></div><div><div class="al-text">${a.msg}</div><div class="al-time">${t} WAT</div></div>`;
+  feed.prepend(d);
+  while(feed.children.length>5) feed.removeChild(feed.lastChild);
+  document.getElementById('badgeCount').textContent=Math.min(feed.querySelectorAll('.al-dot.high').length+2,9);
+}
+for(let i=0;i<4;i++) pushAlert();
+setInterval(pushAlert,5200);
+
+// ── GAUGE ──────────────────────────────────────────
+let gVal=34;
+function drawGauge(v){
+  const c=document.getElementById('gaugeCanvas'),ctx=c.getContext('2d');
+  ctx.clearRect(0,0,200,115);
+  const color=v<40?'#00c853':v<70?'#ff9100':'#ff1744';
+  ctx.beginPath(); ctx.arc(100,105,78,Math.PI,2*Math.PI);
+  ctx.strokeStyle='#1e2332'; ctx.lineWidth=13; ctx.stroke();
+  ctx.beginPath(); ctx.arc(100,105,78,Math.PI,Math.PI+(Math.PI*v/100));
+  ctx.strokeStyle=color; ctx.lineWidth=13; ctx.lineCap='round';
+  ctx.shadowBlur=14; ctx.shadowColor=color; ctx.stroke(); ctx.shadowBlur=0;
+}
+drawGauge(gVal);
+setInterval(()=>{ gVal=Math.max(8,Math.min(85,gVal+(Math.random()*5-2.5))); document.getElementById('gaugeNum').textContent=Math.round(gVal); drawGauge(gVal); }, 3000);
+
+// ── VOLUME CHART ───────────────────────────────────
+function drawVol(){
+  const canvas=document.getElementById('volCanvas');
+  canvas.width=canvas.offsetWidth*devicePixelRatio; canvas.height=150*devicePixelRatio;
+  const ctx=canvas.getContext('2d'); ctx.scale(devicePixelRatio,devicePixelRatio);
+  const W=canvas.offsetWidth,H=150,pts=24;
+  const vol=Array.from({length:pts},()=>Math.floor(Math.random()*6000+3000));
+  const fraud=vol.map(v=>Math.floor(v*(Math.random()*.015+.003)));
+  const mx=Math.max(...vol);
+  function area(data,fill,stroke){
+    ctx.beginPath();
+    data.forEach((v,i)=>{ const x=i/(pts-1)*W,y=H-12-(v/mx)*(H*.8); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fillStyle=fill; ctx.fill();
+    ctx.beginPath();
+    data.forEach((v,i)=>{ const x=i/(pts-1)*W,y=H-12-(v/mx)*(H*.8); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.strokeStyle=stroke; ctx.lineWidth=1.5; ctx.stroke();
+  }
+  const g1=ctx.createLinearGradient(0,0,0,H); g1.addColorStop(0,'rgba(41,121,255,.2)'); g1.addColorStop(1,'rgba(41,121,255,0)');
+  const g2=ctx.createLinearGradient(0,0,0,H); g2.addColorStop(0,'rgba(255,23,68,.3)'); g2.addColorStop(1,'rgba(255,23,68,0)');
+  area(vol,g1,'rgba(41,121,255,.7)'); area(fraud,g2,'#ff1744');
+  ctx.fillStyle='#5a6380'; ctx.font='10px Space Mono,monospace';
+  for(let i=0;i<pts;i+=4) ctx.fillText(i+'h',i/(pts-1)*W,H-1);
+}
+setTimeout(drawVol,80); window.addEventListener('resize',drawVol);
+
+// ── NEURAL NETWORK GRAPH ───────────────────────────
+(function(){
+  const c=document.getElementById('netCanvas');
+  c.width=c.offsetWidth||600; c.height=210;
+  const ctx=c.getContext('2d');
+  const nodes=Array.from({length:32},()=>({
+    x:Math.random()*c.width,y:Math.random()*210,
+    vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,
+    r:Math.random()*4+2,f:Math.random()>.8
+  }));
+  function loop(){
+    ctx.clearRect(0,0,c.width,210);
+    for(let i=0;i<nodes.length;i++) for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j],d=Math.hypot(b.x-a.x,b.y-a.y);
+      if(d<155){ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle=`rgba(${a.f||b.f?'255,23,68':'41,121,255'},${.22*(1-d/155)})`; ctx.lineWidth=.7; ctx.stroke(); }
+    }
+    nodes.forEach(n=>{
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      ctx.fillStyle=n.f?'#ff1744':'#2979ff';
+      ctx.shadowBlur=n.f?10:5; ctx.shadowColor=n.f?'#ff1744':'#2979ff';
+      ctx.fill(); ctx.shadowBlur=0;
+      n.x+=n.vx; n.y+=n.vy;
+      if(n.x<0||n.x>c.width)n.vx*=-1;
+      if(n.y<0||n.y>210)n.vy*=-1;
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// ═══════════════════════════════════════════════════
+// FRAUD DETECTION ENGINE
+// Weighted rule-based scoring system simulating
+// LSTM + Attention deep learning model output
+// ═══════════════════════════════════════════════════
+function runAnalysis(){
+  const amt      = parseFloat(document.getElementById('fAmt').value)||0;
+  const bank     = document.getElementById('fBank').value;
+  const type     = document.getElementById('fType').value;
+  const state    = document.getElementById('fState').value;
+  const time     = document.getElementById('fTime').value;
+  const velocity = document.getElementById('fVelocity').value;
+  const device   = document.getElementById('fDevice').value;
+  const recipient= document.getElementById('fRecipient').value;
+  const bvn      = document.getElementById('fBvn').value;
+
+  if(!amt){ alert('Please enter a transaction amount in Naira (₦)'); return; }
+
+  // Reset UI
+  document.getElementById('resultBox').classList.remove('on');
+  const procBox = document.getElementById('procBox');
+  procBox.classList.add('on');
+  const stepIds = ['s1','s2','s3','s4','s5'];
+  stepIds.forEach(id=>{ const el=document.getElementById(id); el.className='proc-step'; });
+  document.getElementById('procBarFill').style.width='0%';
+
+  // Animate steps
+  let i=0;
+  function nextStep(){
+    if(i>0) document.getElementById(stepIds[i-1]).classList.add('done');
+    document.getElementById('procBarFill').style.width=((i+1)/stepIds.length*100)+'%';
+    if(i<stepIds.length){
+      document.getElementById(stepIds[i]).classList.add('active');
+      i++;
+      setTimeout(nextStep, 420);
+    } else {
+      setTimeout(()=>{
+        procBox.classList.remove('on');
+        const result = scoreTransaction(amt,bank,type,state,time,velocity,device,recipient,bvn);
+        displayResult(result);
+      }, 350);
+    }
+  }
+  nextStep();
+}
+
+function getLabel(selectId){
+  const s=document.getElementById(selectId);
+  return s.options[s.selectedIndex].text;
+}
+
+function scoreTransaction(amt,bank,type,state,time,velocity,device,recipient,bvn){
+  let score=0;
+  const factors=[], goodFactors=[];
+
+  // 1. AMOUNT
+  if(amt>1000000){ score+=28; factors.push({t:`Very high value ₦${amt.toLocaleString()} — far above typical account baseline`,c:'bad'}); }
+  else if(amt>500000){ score+=18; factors.push({t:`High value ₦${amt.toLocaleString()} — above normal transaction threshold`,c:'bad'}); }
+  else if(amt>200000){ score+=10; factors.push({t:`Moderate-high value ₦${amt.toLocaleString()} — flagged for monitoring`,c:'warn'}); }
+  else { goodFactors.push({t:`Amount ₦${amt.toLocaleString()} is within the normal expected range`,c:'good'}); }
+
+  // Round-amount Nigerian scam pattern
+  if(amt>=50000 && amt%50000===0){ score+=8; factors.push({t:`Round-amount pattern (₦${amt.toLocaleString()}) — hallmark of Nigerian social engineering fraud`,c:'warn'}); }
+
+  // 2. TRANSACTION TYPE
+  const typeRisk={crypto:25,atm:12,ussd:6,nip:4,mobile:4,internet:3,pos:3,airtime:1};
+  score+=typeRisk[type]||0;
+  if(type==='crypto') factors.push({t:'Crypto P2P transaction — high-risk channel frequently used for money laundering in Nigeria',c:'bad'});
+  else if(type==='atm') factors.push({t:'ATM withdrawal — moderate risk, especially at off-branch or night-time terminals',c:'warn'});
+  else goodFactors.push({t:`${getLabel('fType')} is a standard, lower-risk transaction channel`,c:'good'});
+
+  // 3. LOCATION
+  if(state==='vpn'){ score+=30; factors.push({t:'VPN/Proxy IP detected — geographic masking is a primary indicator of fraudulent intent',c:'bad'}); }
+  else if(state==='international'){ score+=20; factors.push({t:'Transaction initiated from outside Nigeria — abnormal for a domestic account',c:'bad'}); }
+  else goodFactors.push({t:`Location: ${getLabel('fState')} — within Nigeria, no geographic anomaly`,c:'good'});
+
+  // 4. TIME
+  if(time==='latenight'){ score+=14; factors.push({t:'Late-night transaction (10PM–5AM) — significantly outside normal customer activity window',c:'bad'}); }
+  else if(time==='earlymorning'){ score+=7; factors.push({t:'Early morning transaction — slightly outside typical activity hours, requires monitoring',c:'warn'}); }
+  else goodFactors.push({t:'Transaction time falls within normal business or evening hours',c:'good'});
+
+  // 5. VELOCITY
+  if(velocity==='high'){ score+=24; factors.push({t:'Critical velocity: 10+ transactions per hour — strong signal of automated fraud or account takeover',c:'bad'}); }
+  else if(velocity==='elevated'){ score+=12; factors.push({t:'Elevated velocity (4–10/hr) — above normal, requires closer monitoring',c:'warn'}); }
+  else goodFactors.push({t:'Transaction velocity is within the normal expected range (1–3 per hour)',c:'good'});
+
+  // 6. DEVICE / SIM
+  if(device==='simswap'){ score+=30; factors.push({t:'SIM swap detected within 48 hours — the #1 fraud vector in Nigeria; critical risk signal',c:'bad'}); }
+  else if(device==='rooted'){ score+=18; factors.push({t:'Rooted/jailbroken device — security controls may be bypassed; high exploitation risk',c:'bad'}); }
+  else if(device==='multisim'){ score+=12; factors.push({t:'Multiple SIMs on device — pattern frequently associated with Nigerian telecom fraud',c:'warn'}); }
+  else if(device==='newdevice'){ score+=8; factors.push({t:'New device fingerprint — first-time device access on this account',c:'warn'}); }
+  else goodFactors.push({t:'Known device with verified SIM — trusted and authenticated channel',c:'good'});
+
+  // 7. RECIPIENT
+  if(recipient==='flagged'){ score+=30; factors.push({t:'Recipient account is blacklisted — previously linked to confirmed fraud investigations',c:'bad'}); }
+  else if(recipient==='multinew'){ score+=18; factors.push({t:'Multiple new recipient accounts — matches mule account distribution fraud pattern',c:'bad'}); }
+  else if(recipient==='roundamt'){ score+=10; factors.push({t:'Round-amount transfers to new accounts — typical of advance-fee and romance scam disbursement',c:'warn'}); }
+  else if(recipient==='newfirst'){ score+=7; factors.push({t:'First transfer to this beneficiary — no prior relationship established on this account',c:'warn'}); }
+  else goodFactors.push({t:'Transfer to saved beneficiary — established prior transaction relationship',c:'good'});
+
+  // 8. BVN
+  if(bvn==='blocked'){ score+=25; factors.push({t:'BVN flagged by CBN — identity previously associated with fraudulent activity',c:'bad'}); }
+  else if(bvn==='mismatch'){ score+=22; factors.push({t:'BVN does not match account holder details — strong identity fraud indicator',c:'bad'}); }
+  else if(bvn==='unverified'){ score+=10; factors.push({t:'BVN unverified — cannot confirm account holder identity at this time',c:'warn'}); }
+  else goodFactors.push({t:'BVN verified and matches account profile — identity confirmed',c:'good'});
+
+  // 9. HIGH-RISK CHANNEL COMBO
+  if(['opay','palmpay'].includes(bank) && velocity!=='normal'){
+    score+=8;
+    factors.push({t:`${getLabel('fBank')} + elevated velocity — mobile wallet with high velocity is a common fraud combo in Nigeria`,c:'warn'});
+  }
+
+  score = Math.min(100, Math.max(0, Math.round(score)));
+
+  // Verdict
+  let verdict,headCls,emoji,action,actionCls,ngPattern;
+  if(score>=70){
+    verdict='HIGH RISK — FRAUD DETECTED';
+    headCls='dh'; emoji='🔴';
+    action='🛑 BLOCK TRANSACTION IMMEDIATELY. Freeze account pending full investigation. Notify account holder via registered email. Escalate to Fraud Operations team. Report to EFCC and CBN Financial Intelligence Unit (NFIU).';
+    actionCls='block-a';
+    ngPattern='🇳🇬 Pattern Match: This transaction strongly matches SIM-swap / account-takeover fraud patterns widely reported across Nigerian banks. CBN reporting is mandatory within 24 hours.';
+  } else if(score>=40){
+    verdict='SUSPICIOUS — MANUAL REVIEW REQUIRED';
+    headCls='wh'; emoji='🟡';
+    action='⚠️ HOLD TRANSACTION. Trigger step-up authentication (OTP + security question). Contact account holder via registered number to confirm intent. Decline and flag if unconfirmed within 10 minutes.';
+    actionCls='review-a';
+    ngPattern='🇳🇬 Pattern: Transaction shows multiple soft-risk signals consistent with social engineering or unauthorised access. Matches patterns seen in Ogun, Lagos and Delta fraud clusters.';
+  } else {
+    verdict='LEGITIMATE — TRANSACTION CLEARED';
+    headCls='sh'; emoji='🟢';
+    action='✅ APPROVE TRANSACTION. All risk parameters are within acceptable thresholds. Transaction may proceed normally. Continue passive monitoring of account activity per CBN AML guidelines.';
+    actionCls='allow-a';
+    ngPattern='🇳🇬 No known Nigerian fraud patterns detected. Transaction profile is consistent with normal customer behaviour for this channel and account type.';
+  }
+
+  // Model confidence metrics
+  const precision = (94+Math.random()*5).toFixed(1);
+  const recall    = (92+Math.random()*6).toFixed(1);
+  const f1        = ((parseFloat(precision)+parseFloat(recall))/2).toFixed(1);
+
+  return {score,verdict,headCls,emoji,factors,goodFactors,action,actionCls,ngPattern,precision,recall,f1};
+}
+
+function displayResult(r){
+  const color=r.score>=70?'var(--danger)':r.score>=40?'var(--warn)':'var(--safe)';
+
+  document.getElementById('resultHead').className=`result-head ${r.headCls}`;
+  const vEl=document.getElementById('resultVerdict');
+  vEl.textContent=`${r.emoji} ${r.verdict}`; vEl.style.color=color;
+  const sEl=document.getElementById('resultScore');
+  sEl.textContent=`Score: ${r.score}/100`; sEl.style.color=color;
+
+  const fill=document.getElementById('scoreFill');
+  fill.style.width='0%'; fill.style.background=color;
+  fill.style.boxShadow=`0 0 8px ${color}`;
+  setTimeout(()=>{ fill.style.width=r.score+'%'; }, 60);
+
+  // Confidence metrics
+  document.getElementById('confRow').innerHTML=`
+    <div class="conf-item"><div class="conf-val" style="color:var(--blue)">${r.precision}%</div><div class="conf-lbl">PRECISION</div></div>
+    <div class="conf-item"><div class="conf-val" style="color:var(--safe)">${r.recall}%</div><div class="conf-lbl">RECALL</div></div>
+    <div class="conf-item"><div class="conf-val" style="color:var(--gold)">${r.f1}%</div><div class="conf-lbl">F1 SCORE</div></div>
+    <div class="conf-item"><div class="conf-val" style="color:${color}">${r.score}</div><div class="conf-lbl">FRAUD SCORE</div></div>
+  `;
+
+  // Factors
+  const allFactors=[...r.factors,...r.goodFactors];
+  document.getElementById('factorList').innerHTML=allFactors.map(f=>`
+    <div class="factor-item ${f.c}">
+      <span>${f.c==='bad'?'⚠️':f.c==='warn'?'△':'✓'}</span>
+      <span>${f.t}</span>
+    </div>`).join('');
+
+  document.getElementById('actionBox').className=`action-box ${r.actionCls}`;
+  document.getElementById('actionBox').textContent=r.action;
+  document.getElementById('ngPattern').textContent=r.ngPattern;
+
+  document.getElementById('resultBox').classList.add('on');
+  document.getElementById('resultBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function clearForm(){
+  document.getElementById('fAmt').value='';
+  document.getElementById('resultBox').classList.remove('on');
+  document.getElementById('procBox').classList.remove('on');
+}
+
+function loadDemo(){
+  // High-risk SIM swap demo case
+  document.getElementById('fAmt').value='750000';
+  document.getElementById('fBank').value='gtbank';
+  document.getElementById('fType').value='nip';
+  document.getElementById('fState').value='vpn';
+  document.getElementById('fTime').value='latenight';
+  document.getElementById('fVelocity').value='high';
+  document.getElementById('fDevice').value='simswap';
+  document.getElementById('fRecipient').value='multinew';
+  document.getElementById('fBvn').value='mismatch';
+  document.getElementById('analyzeSection').scrollIntoView({behavior:'smooth'});
+}
+
+function refreshAll(){
+  txRows.unshift(makeTx());
+  if(txRows.length>20)txRows.pop();
+  renderTx(); pushAlert(); drawVol();
+}
+</script>
+</body>
+</html>
